@@ -1,0 +1,383 @@
+---
+title: "Assessment 3 Alicia Phan"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    theme: bootstrap
+    highlight: tango
+    code_folding: hide
+  pdf_document:
+    latex_engine: xelatex
+bibliography: references.bib
+date: "2025-09-19"
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(rio, here, tidyverse, dplyr, RColorBrewer, cowplot, ggpubr, gghighlight, grid, scales, skimr)
+nhanes_data <- import(here("data", "cleaned_NHANES.csv"))
+diet_data <- import(here("data", "diet.csv"))
+```
+
+## Exercise 1 - Reproducing and arranging ggplot2 figures
+
+## Recreating two figures (age and gender, ethnicity and gender) {.tabset}
+
+### Histogram of age by gender
+```{r Gender and age, echo = FALSE}
+p1 <- ggplot(nhanes_data, aes(x = age, fill = gender)) +
+  geom_histogram(binwidth = 5, position = "dodge") +
+  labs(title = "Histogram of age by gender", x = "Age", y = "Count", 
+      ) +
+  theme(plot.margin=unit(c(1,0.5,1,2), 'cm'), legend.position = "top", 
+          axis.text.x = element_text(size = 8))
+
+p1
+```
+
+### Percentage of gender by ethnicity
+
+```{r Gender and ethnicity, echo=FALSE}
+p2 <- ggplot(nhanes_data, aes(x = ethnicity_2, fill = gender)) +
+    geom_bar(position = "fill") +
+    labs(title = "Percentage of gender by ethnicity", x = "Ethnicity", 
+         y = "Percentage") +
+    theme(plot.margin = unit(c(1,0.5,1,0.5), "cm"), legend.position = "top", 
+          axis.text.x = element_text(size = 8)) + 
+    scale_x_discrete(labels = label_wrap(10))
+  
+           
+p2
+```
+
+
+## Combining the two plots: 
+Please refer to the combined plot below showing the two methods used. 
+The two methods are easy to use to combine multiple plots to one plot. However, 
+there were several additions added to the original plot to ensure readability of the plots. 
+For both methods, the x axis for the second plot showing ethnicity showed some overlapping text
+due to the plot size when combined. From this, label_wrap function was used to wrap
+the x labels and ensure readability.
+The ggarrange method shows easier way to combine the two plots with shared legend,
+the two plots here shared the legend of gender column, which is faciliated through
+the field "common.legend = TRUE" field. In comparison, the plot_grid function from cowplot package
+does not have this field; however, there is a solution to add common legend by extracting the legend. 
+
+
+#### Using plot_grid() function from cowplot package
+```{r plot_grid result, echo=FALSE}
+plot_grid(p1, p2)
+
+```
+
+#### Using ggarrange() function from ggpubr package
+```{r ggarrange result, echo=FALSE}
+ggarrange(p1, p2, common.legend = TRUE, legend = "top")
+
+```
+
+
+## Exercise 2 - Visualizing key characteristics
+
+### Visualisations of the following variables: Age, gender, ethnicity variables
+
+**Age**
+
+
+```{r age, echo=FALSE}
+age_missing <- nhanes_data %>%
+  mutate(missing_age = ifelse(is.na(age), "Missing", "Not missing"))
+
+histogram_age <- ggplot(nhanes_data, aes(x = age)) +
+  geom_histogram(bins = 10) +
+  labs(title = "Histogram of age", x = "Age", y = "Count")
+
+age_missing_plot <- ggplot(age_missing, aes(x = missing_age)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Missing & non missing data of age", x = "Missing vs Non missing", 
+       y = "Count")
+
+age_combined <- plot_grid(histogram_age, age_missing_plot)
+age_combined
+```
+
+
+**Gender**
+
+```{r gender, echo=FALSE}
+gender_missing <- nhanes_data %>%
+  mutate(missing_gender = ifelse(is.na(gender), "Missing", "Not missing"))
+
+histogram_gender <- ggplot(nhanes_data, aes(x = gender, fill = gender)) +
+  geom_bar() +
+  labs(title = "Histogram of gender", x = "Gender", y = "Count")
+
+gender_missing_plot <- ggplot(gender_missing, aes(x = missing_gender)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Gender - Missing vs non missing", x = "Missing vs Non missing", 
+       y = "Count")
+
+gender_combined <- plot_grid(histogram_gender, gender_missing_plot)
+gender_combined
+```
+
+
+**Ethnicity variables**
+
+*a. Ethnicity 1*
+
+
+
+```{r ethnicity 1, echo=FALSE}
+eth_missing <- nhanes_data %>%
+  mutate(missing_eth = ifelse(is.na(ethnicity_1), "Missing", "Not missing"))
+
+histogram_eth <- ggplot(nhanes_data, aes(x = ethnicity_1)) +
+  geom_bar() +
+  labs(title = "Count of Race/Hispanic origin", x = "Ethnicity", y = "Count") +
+  scale_x_discrete(labels = label_wrap(10))
+
+eth_missing_plot <- ggplot(gender_missing, aes(x = missing_gender)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Ethnicity - Missing vs non missing", x = "Missing vs Non missing", 
+       y = "Count") + 
+  scale_x_discrete(labels = label_wrap(10))
+
+ethnicity1_combined <- plot_grid(histogram_eth, eth_missing_plot)
+ethnicity1_combined
+```
+
+
+
+*b. Ethnicity 2*
+
+```{r ethnicity 2, echo=FALSE}
+eth_missing2 <- nhanes_data %>%
+  mutate(missing_eth = ifelse(is.na(ethnicity_2), "Missing", "Not missing"))
+
+histogram_eth2 <- ggplot(nhanes_data, aes(x = ethnicity_2)) +
+  geom_bar() +
+  labs(title = "Count of Race/Hispanic/Asian origin", x = "Ethnicity", y = "Count") +
+  scale_x_discrete(labels = label_wrap(10))
+
+eth_missing_plot2 <- ggplot(gender_missing, aes(x = missing_gender)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Ethnicity - Missing vs non missing", x = "Missing vs Non missing", 
+       y = "Count")
+
+ethnicity2_combined <- plot_grid(histogram_eth2, eth_missing_plot2)
+ethnicity2_combined
+```
+
+
+```{r Save, echo=TRUE, eval=FALSE}
+ggsave("age_combined.png", age_combined)
+ggsave("gender_combined.png", gender_combined)
+ggsave("ethnicity1.png", ethnicity1_combined)
+ggsave("ethnicity2.png", ethnicity2_combined)
+
+```
+Based on the results of both variable, it is shown that there were 5000 observation of "other" category in the first variable, whereas only around 1000 observations of "other" category in the second one. From this, it is more preferable to select the variable Ethnicity 2 to include more details counts of the ethnicity variable that includes Asian category. The Ethnicity 2 variable 
+is able to explain more of the data. 
+Therefore, the ethnicity 1 variable will be removed. 
+
+```{r remove variable, echo=TRUE}
+nhanes_data <- nhanes_data %>%
+  select(-ethnicity_1)
+
+```
+
+
+## Exercise 3 - Improving ggplot figure
+
+For interpretation of the gragh, the graph is missing descriptive elements like 
+title of gragh, legend of the graph, weight measurement value. In addition, there were too many colors used for the graph for each participant; the colors used were rainbow-color, which might not be friendly for color deficiency readers. 
+
+For visual representation, the area for the color is very minimal for each participant,
+and there is overlapping between lines. In addition, the background grid has too many
+lines. In addition, the lines are too thin as well, make it hard for line visibility. 
+
+Regarding data completeness, it seems that the legend for participant 1 is missing. 
+This is due to the length of the legend that does not fit the plot. This also causes the confusion and the completeness of the data when presented in the plot. 
+
+The following suggestions are proposed: 
+
+* Title, Legend name, and weight measurement value should be added. 
+* Background grid should be simplified. 
+* If possible, the information on how much the participant increase/decrease can be shown, 
+and that information on each participant should be available. Proposition on creating categories of increase/decrease from beginning to end for each participants. 
+
+```{r diet, fig.width = 10, fig.height = 10, echo=FALSE}
+diet_data <- diet_data %>%
+  group_by(Participant) %>%
+  mutate(weight_change = Weight[Week == 16] - Weight[Week == 0], 
+         perc_change = weight_change*100/Weight[Week == 0])
+
+
+ggplot(diet_data, aes(x = Week, y = Weight, group = Participant, color = perc_change)) +
+  geom_line(size = 1.5) + 
+  theme( 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank()) +
+  labs(color = "Percentage of change in weight") +
+  scale_color_viridis_c(option = "viridis") +
+  facet_wrap(~ Participant)
+
+```
+
+
+
+
+## Exercise 4 - Exploring relationships through visualizations
+
+The report aims to understand the relationships between age, gender, and systolic blood pressure
+(SBP). In order to explore the relationships between variables, it is important to 
+verify the data completeness and the data itself. /
+
+Below is a summary of the NHANES data that will be used for analysis showing the
+missing data and completion rate of each variable. Based on the data, 
+we noted that there are four SBP measurements representing different time of measurement. 
+In addition, the SBP measurements include missing data where the completion rates are 70%, 72.3%, 
+72.1%, and 4.7% for measurements from wave 1 to 4 respectively. Furthermore, both gender and age 
+variables have completion rate of 100% meaning no missing data. 
+
+```{r Preliminary data verification,  echo=FALSE}
+nhanes_data_analysis_raw <- nhanes_data %>%
+  select(patient_id, systolic_bp_1, systolic_bp_2, systolic_bp_3, systolic_bp_4,
+         gender, age)
+skim(nhanes_data_analysis_raw)
+```
+
+
+Based on the preliminary data completeness analysis above, the data transformation was conducted 
+to take average of all four SBP measurements to obtain a new SBP variable as average SBP. 
+Regarding the average SBP variable, the variable is missing only if four of the measurements are missing. 
+Subsequently, in order to ensure the quality of analysis, we filtered out the observations where 
+average SBP variable, age or gender variable is missing. Noted that the age and gender variables are completed per above observation, therefore, we only filtered out observations where average SBP is missing. 
+ 
+
+```{r data cleaning,  echo = TRUE}
+nhanes_complete <- nhanes_data_analysis_raw %>%
+  mutate(avg_sbp = rowMeans(select(nhanes_data_analysis_raw, systolic_bp_1, 
+                                   systolic_bp_2, systolic_bp_3, systolic_bp_4)
+                            , na.rm = TRUE)) %>%
+  filter(!is.na(avg_sbp)) %>%
+  select(patient_id, age, gender, avg_sbp)
+
+skim(nhanes_complete)
+```
+After the data cleaning, `r nrow(nhanes_data_analysis_raw) - nrow(nhanes_complete)` observations were removed from the original dataset to remove the missing data. Skim() function was used to ensure the data completeness 
+of the three variables: Age, gender, avg_sbp. 
+
+
+In order to further understand the dataset, we need to explore the distribution of 
+each of the variable. 
+
+```{r data plots, fig.width = 10,  echo = FALSE}
+age <- ggplot(nhanes_complete, aes(x = age)) +
+  geom_histogram(bins = 10) +
+  labs(title = "Distribution of age variable")
+
+gender <- ggplot(nhanes_complete, aes(x = gender)) +
+  geom_bar()+
+  labs(title = "Distribution of gender variable")
+
+avg_sbp <- ggplot(nhanes_complete, aes(x = avg_sbp)) +
+  geom_histogram(aes(y = after_stat(density)), 
+                 bins = 10, alpha = 0.5) +
+  geom_density(fill = "lightgrey", linewidth = 1, alpha = 0.5) +
+  labs(title = "Distribution of average SBP variable")
+
+nhanes_combined <- plot_grid(age, gender, avg_sbp)
+nhanes_combined
+```
+
+We noted that average SBP is a continuous numeric variable with right skewed distribution. 
+However, looking at only the distribution, there is limited information on where the value of SBP is considered normal. 
+From this, a new categorical variable is created to classify the average SBP observations to the level severity as follows: 
+
+* Normal SBP < 120 mm Hg
+* Elevated: 120 ≤ SBP ≤ 129 mm Hg
+* Stage 1 hypertension: 130 ≤ SBP ≤ 139 mm Hg
+* Stage 2 hypertension: SBP ≥ 140 mm Hg
+
+
+```{r data category, fig.width = 8, echo = FALSE}
+nhanes_analysis <- nhanes_complete %>%
+  mutate(sbp_cat = cut(avg_sbp, breaks = c(0,119, 129, 139, 300), 
+                       labels = c("Normal", "Elevated", 
+                                  "Stage 1 hypertension", 
+                                  "Stage 2 hypertension")))
+
+sbp_cat <- ggplot(nhanes_analysis, aes(x = sbp_cat)) +
+  geom_bar()+
+  labs(title = "Distribution of SBP category variable")
+
+sbp_cat
+```
+
+Finally, we will explore the relationships between age, gender, and blood pressure diagnosis.
+We first compared the SBP diagnosis with gender facet. There is an apparent trend that there are more observations for Elevated, Stage 1 and Stage 2 hypertension diagnosis for older age groups than younger ones starting at 50 and 60 years old. 
+We also observed that the distribution of Elevated diagnosis shows less left skew for Male category than Female category. 
+This means that there are more observations that male patients have higher blood pressure at the age of 20-30 years old. 
+Similarly, Stage 1 hypertension for male is also less left skewed comparing to women, 
+with more observations of stage 1 hypertension diagnosis for men than women at around 20-30 years old. 
+
+
+```{r data exploration, fig.width = 8, fig.height = 8, echo = FALSE}
+exploration <- ggplot(nhanes_analysis, aes(x = age, fill = sbp_cat)) +
+  geom_bar() +
+  facet_wrap(~ gender) +
+  scale_fill_manual(values = c(
+    "Normal" = "#2E7D32",
+    "Elevated" = "#F9A825",
+    "Stage 1 hypertension" = "#EF6C00",
+    "Stage 2 hypertension" = "#C62828"
+  )) +
+  labs(fill = "SBP diagnosis") +
+  theme(
+    axis.ticks.x = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    panel.grid.major = element_blank(), 
+    panel.grid.major.y =
+      element_line(color = "grey", linewidth = 0.2), 
+    panel.grid.minor.y =
+      element_line(color = "grey", linewidth = 0.2)
+    
+  )
+
+exploration
+```
+
+
+Secondly, we compared again age and gender but with SBP diagnosis as facet. This 
+further confirmed our observations above where there are more male observations with Elevated diagnosis and Stage 1 hypertension at around 20-30 years old, and more female observations with normal diagnosis at the same age group. 
+In contrast, for the age group from 50 years old and older, there is no notable pattern observed between the genders. 
+
+```{r data exploration 2, fig.width = 8, fig.height = 8, echo = FALSE}
+exploration_by_gender <- ggplot(nhanes_analysis, aes(x = age, fill = gender)) +
+  geom_histogram(bins = 8, position = "dodge") +
+  facet_wrap(~ sbp_cat) +
+  labs(fill = "gender") +
+  theme(
+    axis.ticks.x = element_blank(), 
+    panel.grid.minor = element_blank(), 
+    panel.grid.major = element_blank(), 
+    panel.grid.major.y =
+      element_line(color = "grey", linewidth = 0.2), 
+    panel.grid.minor.y =
+      element_line(color = "grey", linewidth = 0.2)
+    
+  )
+
+exploration_by_gender
+```
+
+
+In conclusion, we can see that there are more Elevated, Stage 1 and Stage 2 diagnosis for older age groups. 
+In addition, there is a notable observation where male patients have higher blood pressure for younger age groups around 20 - 30 years old. [@caliendo2008]
+
+## References
+
