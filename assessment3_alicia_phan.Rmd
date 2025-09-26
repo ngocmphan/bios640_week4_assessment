@@ -5,8 +5,8 @@ output:
     toc: true
     toc_float: true
     toc_depth: 2
-    theme: bootstrap
-    highlight: tango
+    theme: flatly
+    highlight: espresso
     code_folding: hide
   pdf_document:
     latex_engine: xelatex
@@ -16,16 +16,16 @@ date: "2025-09-19"
 
 ```{r setup, include=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pacman::p_load(rio, here, tidyverse, dplyr, RColorBrewer, cowplot, ggpubr, gghighlight, grid, scales, skimr)
+pacman::p_load(rio, here, tidyverse, dplyr, RColorBrewer, cowplot, ggpubr, gghighlight, grid, scales, skimr, DT)
 nhanes_data <- import(here("data", "cleaned_NHANES.csv"))
 diet_data <- import(here("data", "diet.csv"))
 ```
 
-## Exercise 1 - Reproducing and arranging ggplot2 figures
+## Exercise 1 - Reproducing and arranging ggplot2 figures {.tabset}
 
-## Recreating two figures (age and gender, ethnicity and gender) {.tabset}
+### Recreating two figures (age & gender, ethnicity & gender) 
 
-### Histogram of age by gender
+#### Histogram of age by gender
 ```{r Gender and age, echo = FALSE}
 p1 <- ggplot(nhanes_data, aes(x = age, fill = gender)) +
   geom_histogram(binwidth = 5, position = "dodge") +
@@ -37,7 +37,7 @@ p1 <- ggplot(nhanes_data, aes(x = age, fill = gender)) +
 p1
 ```
 
-### Percentage of gender by ethnicity
+#### Percentage of gender by ethnicity
 
 ```{r Gender and ethnicity, echo=FALSE}
 p2 <- ggplot(nhanes_data, aes(x = ethnicity_2, fill = gender)) +
@@ -53,7 +53,7 @@ p2
 ```
 
 
-## Combining the two plots: 
+### Combining the two plots
 Please refer to the combined plot below showing the two methods used. 
 The two methods are easy to use to combine multiple plots to one plot. However, 
 there were several additions added to the original plot to ensure readability of the plots. 
@@ -82,6 +82,15 @@ ggarrange(p1, p2, common.legend = TRUE, legend = "top")
 ## Exercise 2 - Visualizing key characteristics
 
 ### Visualisations of the following variables: Age, gender, ethnicity variables
+
+**Interactive table**
+```{r data table, echo=FALSE}
+datatable(nhanes_data, options = list(scrollX = TRUE))
+
+
+```
+
+
 
 **Age**
 
@@ -377,7 +386,7 @@ exploration_by_gender
 
 
 In conclusion, we can see that there are more Elevated, Stage 1 and Stage 2 diagnosis for older age groups. 
-In addition, there is a notable observation where male patients have higher blood pressure for younger age groups around 20 - 30 years old. [@caliendo2008]
+In addition, there is a notable observation where male patients have higher blood pressure for younger age groups around 20 - 30 years old. 
 
 ## References
 
