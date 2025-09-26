@@ -1,6 +1,8 @@
 ---
 title: "Assessment 3 Alicia Phan"
 output:
+  pdf_document:
+    latex_engine: xelatex
   html_document: 
     toc: true
     toc_float: true
@@ -8,8 +10,6 @@ output:
     theme: bootstrap
     highlight: tango
     code_folding: hide
-  pdf_document:
-    latex_engine: xelatex
 bibliography: references.bib
 date: "2025-09-19"
 ---
@@ -23,7 +23,7 @@ diet_data <- import(here("data", "diet.csv"))
 
 ## Exercise 1 - Reproducing and arranging ggplot2 figures
 
-## Recreating two figures (age and gender, ethnicity and gender) {.tabset}
+## Recreating two figures (age and gender, ethnicity and gender)
 
 ### Histogram of age by gender
 ```{r Gender and age, echo = FALSE}
