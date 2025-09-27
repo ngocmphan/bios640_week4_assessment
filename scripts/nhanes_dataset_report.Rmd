@@ -1,0 +1,10 @@
+---
+title: "nhanes dataset report"
+output: html_document
+date: "2025-09-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+

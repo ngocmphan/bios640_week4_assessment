@@ -27,7 +27,8 @@ Row {data-height=350, data-width=500}
 
 pct_21_older <- nrow(nhanes_data[nhanes_data$age >= 21, ])*100/nrow(nhanes_data)
 
-gauge_pct_age <- gauge(pct_21_older, min = 0, max = 100, symbol = "%"
+gauge_pct_age <- gauge(pct_21_older, min = 0, max = 100, symbol = "%", 
+                       sectors = gaugeSectors(colors = "lightgreen")
                        )
 gauge_pct_age
 ``` 
@@ -45,7 +46,7 @@ nhanes_complete <- nhanes_data %>%
 
 sbp_120mm_above <- round(nrow(nhanes_complete[nhanes_complete$avg_sbp >= 120, ])*100/nrow(nhanes_complete), 2)
 
-value_sbp120 <- valueBox(sbp_120mm_above)
+value_sbp120 <- valueBox(sbp_120mm_above, color = "info")
 value_sbp120
 ``` 
 
