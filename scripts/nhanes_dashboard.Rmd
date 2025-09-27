@@ -1,21 +1,22 @@
 ---
 title: "NHANES Dashboard"
-output: 
-  flexdashboard::flex_dashboard
+output:
+  flexdashboard::flex_dashboard:
     orientation: rows
+output_dir: "../outputs"
 date: "2025-09-27"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 pacman::p_load(rio, here, tidyverse, dplyr, RColorBrewer, cowplot, ggpubr, gghighlight, grid, scales, skimr, DT, flexdashboard)
-```
+nhanes_data <- import(here("data", "cleaned_NHANES.csv"))
+``` 
 
 Row {data-height=650}
 ---------------------------------------
-### Chart 1
-
-
+### Histogram of age variable - NHANES data
+![](../plots/histogram_age.png)
 
 
 Row {data-height=350}
