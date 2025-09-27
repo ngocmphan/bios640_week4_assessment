@@ -3,26 +3,56 @@ title: "NHANES Dashboard"
 output:
   flexdashboard::flex_dashboard:
     orientation: rows
-output_dir: "../outputs"
+    vertical_layout: fill
 date: "2025-09-27"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pacman::p_load(rio, here, tidyverse, dplyr, RColorBrewer, cowplot, ggpubr, gghighlight, grid, scales, skimr, DT, flexdashboard)
+pacman::p_load(rio, here, tidyverse, dplyr, RColorBrewer, cowplot, ggpubr, gghighlight, grid, scales, skimr, DT, flexdashboard, shiny)
 nhanes_data <- import(here("data", "cleaned_NHANES.csv"))
+
 ``` 
 
 Row {data-height=650}
 ---------------------------------------
 ### Histogram of age variable - NHANES data
-![](../plots/histogram_age.png)
+![](../plots/histogram_age.png){scale_width :2}
 
 
-Row {data-height=350}
+Row {data-height=350, data-width=500}
 ---------------------------------------
-### Chart 2
+### Percentage of individuals aged 21 and older in NHANES data
+```{r % of individuals 21 years and older, echo = FALSE}
+
+pct_21_older <- nrow(nhanes_data[nhanes_data$age >= 21, ])*100/nrow(nhanes_data)
+
+gauge_pct_age <- gauge(pct_21_older, min = 0, max = 100, symbol = "%"
+                       )
+gauge_pct_age
+``` 
 
 
 
-### Chart 3
+### % Percentage of invididuals with average SBP 120mm Hg and above
+```{r % of individuals with average SBP above 120mm, echo = FALSE}
+nhanes_complete <- nhanes_data %>%
+  mutate(avg_sbp = rowMeans(select(nhanes_data, systolic_bp_1, 
+                                   systolic_bp_2, systolic_bp_3, systolic_bp_4)
+                            , na.rm = TRUE)) %>%
+  filter(!is.na(avg_sbp)) %>%
+  select(patient_id, age, gender, avg_sbp)
+
+sbp_120mm_above <- round(nrow(nhanes_complete[nhanes_complete$avg_sbp >= 120, ])*100/nrow(nhanes_complete), 2)
+
+value_sbp120 <- valueBox(sbp_120mm_above)
+value_sbp120
+``` 
+
+```{r knit, include=FALSE, eval=FALSE}
+
+rmarkdown::render(
+  input = "nhanes_dashboard.Rmd",
+  output_dir = "../outputs"
+)
+``` 
