@@ -1,0 +1,27 @@
+---
+title: "NHANES Dashboard"
+output: 
+  flexdashboard::flex_dashboard
+    orientation: rows
+date: "2025-09-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(rio, here, tidyverse, dplyr, RColorBrewer, cowplot, ggpubr, gghighlight, grid, scales, skimr, DT, flexdashboard)
+```
+
+Row {data-height=650}
+---------------------------------------
+### Chart 1
+
+
+
+
+Row {data-height=350}
+---------------------------------------
+### Chart 2
+
+
+
+### Chart 3
