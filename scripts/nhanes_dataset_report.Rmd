@@ -20,7 +20,7 @@ nhanes_data <- import(here("data", "cleaned_NHANES.csv"))
 ```
 
 # NHANES dataset
-NHANES datasets used is a combined dataset between NHANES survey results that includes health exams and lab tests of all ages for systolic and diastolic blood pressure measurements and demographics data including age, gender, ethnicity, income, education and marital status. [@nhanes]
+NHANES datasets used is a combined dataset between NHANES survey results that includes health exams and lab tests of all ages for systolic and diastolic blood pressure measurements and demographics data including age, gender, ethnicity, income, education and marital status. [@nhanes] 
 
 The measurements were measured in four different times across different waves (2015, 2016, and 2017). 
 For current analysis, the following variables will be examined for initial exploration process: gender, ethnicity, and systolic blood pressure. 
