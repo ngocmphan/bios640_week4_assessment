@@ -1,10 +1,195 @@
 ---
-title: "nhanes dataset report"
-output: html_document
+title: "NHANES dataset report"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 3
+  html_document:
+    toc: true
+    toc_depth: '3'
+    df_print: paged
 date: "2025-09-27"
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(rio, here, tidyverse, dplyr, RColorBrewer, cowplot, ggpubr, gghighlight, grid, scales, skimr, DT, flexdashboard, shiny, kableExtra)
+nhanes_data <- import(here("data", "cleaned_NHANES.csv"))
 ```
 
+# NHANES dataset
+NHANES datasets used is a combined dataset between NHANES survey results that includes health exams and lab tests of all ages for systolic and diastolic blood pressure measurements and demographics data including age, gender, ethnicity, income, education and marital status. [@nhanes]
+
+The measurements were measured in four different times across different waves (2015, 2016, and 2017). 
+For current analysis, the following variables will be examined for initial exploration process: gender, ethnicity, and systolic blood pressure. 
+
+Noted that for ethnicity, ethnicity_2 variable will be included as the only ethnicity variable for the dataset as the variable includes more detailed classification. 
+
+
+# Dataset exploration
+The following variables and summary statistics are conducted. 
+
+## Summary statistics of each wave
+In total, there are three waves 2015, 2016, and 2017; with sample size differed between the waves 10,175, 9971, 9254 respectively based on the table below. Noted that the percentage of the total sample is the highest for 2015, and decrease in 2016 and 2017 with 2017 has the lowest sample size. 
+
+```{r Statistics on each wave, echo=FALSE}
+wave_data <- nhanes_data %>%
+  group_by(wave_id) %>%
+  summarise(sample_size = n()) %>%
+  mutate(percentage_rows = sample_size*100/sum(sample_size))
+
+wave_data <- wave_data[order(wave_data$wave_id),]
+
+wave_data_table <- kable(wave_data, format = "latex", 
+                         booktabs = TRUE, 
+                         col.names = c("Wave", "Sample size", 
+                                       "Percentage % total sample"), 
+                         caption = "Summary on sample size and proportion across waves")
+
+wave_data_table <- wave_data_table %>%
+  kable_styling(
+    latex_options = "HOLD_position", 
+    full_width = FALSE
+  )
+
+wave_data_table
+``` 
+
+
+## Information on gender of each wave
+
+In addition to analysis on the sample size, we conducted analysis on the proportion of male and female observations in the dataset. From the table below, the number of observations of male slightly decrease from 2015 to 2017; however, the percentage of male from each wave shows a different trend where male proportion decrease in 2016 and increase by 0.18% to 49.24% in 2017. 
+
+```{r Number and percentage of gender, echo=FALSE}
+wave_data_male <- nhanes_data %>%
+  group_by(wave_id, gender) %>%
+  summarise(sample_size = n(), .groups = "drop_last") %>%
+  mutate(percentage_rows = sample_size*100/sum(sample_size)) %>%
+  ungroup()
+
+
+wave_male_table <- kable(wave_data_male, format = "latex", 
+                         booktabs = TRUE, 
+                         col.names = c("Wave", "Gender", "Sample size", "Percentage of wave"), 
+                         caption = "Sample size and percentage by gender across waves"
+                         
+                         )
+
+wave_male_table <- wave_male_table %>%
+  kable_styling(
+    latex_options = "HOLD_position", 
+    full_width = FALSE
+  ) %>%
+  row_spec(0, bold = TRUE) %>%
+  row_spec(which(wave_data_male$gender == "Male"), background = "#5499C7")
+
+wave_male_table
+``` 
+
+
+## Information on ethnicity of each wave
+
+Ethnicities available in the dataset include White, Black, Meixcan, Asian, Other hispanic, 
+and Other. The table below shows the sample size of each ethnicity by wave and their associated proportions. 
+Based on the data below, we can see that White samples across three years have the highest number of observations; noted that the proportion decreased in 2016 and increased again in 2017. The table below also shows a consistent trend in the number of samples from different ethnicities where the sample size is in the following order: White, Black, Mexican, Asian and Other Hispanic switched ranking for 2016, and Other ethnicity. 
+
+
+```{r Number and percentage of ethnicity, echo=FALSE}
+wave_data_eth<- nhanes_data %>%
+  mutate(wave_id = as.numeric(wave_id)) %>%
+  group_by(wave_id, ethnicity_2) %>%
+  summarise(sample_size = n(), .groups = "drop") %>%
+  group_by(wave_id) %>%
+  mutate(percentage_rows = sample_size*100/sum(sample_size)) %>%
+  ungroup() %>%
+  arrange(wave_id, desc(percentage_rows))
+
+
+wave_eth_table <- kable(wave_data_eth, format = "latex", 
+                         booktabs = TRUE, 
+                         col.names = c("Wave", "Ethnicity", "Sample size", "Percentage of wave")
+                        , caption = "Sample size and percentage of ethnicity across waves"
+                         
+                  ) %>%
+                  pack_rows(
+                    "2015", 1, 6
+                  ) %>%
+                  pack_rows(
+                    "2016", 7, 12
+                  ) %>%
+                  pack_rows(
+                    "2017", 13, 18
+                  ) %>%
+                  kable_styling(
+                    latex_options = "HOLD_position", 
+                    full_width = FALSE)
+                 
+
+wave_eth_table <- wave_eth_table %>%
+  row_spec(0, bold = TRUE) %>%
+  row_spec(which(wave_data_eth$wave_id == 2015), background = "#D0E1F9") %>%
+  row_spec(which(wave_data_eth$wave_id == 2016), background = "#A9CCE3") %>%
+  row_spec(which(wave_data_eth$wave_id == 2017), background = "#5499C7")
+  
+wave_eth_table
+``` 
+
+
+## Summary statistics of systolic blood pressure by wave
+
+In order to analyse the average systolic blood pressure, we need to calculate the average from the four measurements of systolic blood pressure for each participant. The calculation is based on the average of available systolic blood pressure data, the average is missing if all measurements are missing. Please refer to the code below for the calculation of average systolic blood pressure. 
+
+```{r Average systolic blood pressure, echo=TRUE}
+nhanes_avg_bp <- nhanes_data %>%
+  mutate(
+    avg_sbp = rowMeans(
+      select(., systolic_bp_1, systolic_bp_2, systolic_bp_3, systolic_bp_4),
+      na.rm = TRUE
+    ),
+    avg_sbp = if_else(
+      is.na(systolic_bp_1) & is.na(systolic_bp_2) & is.na(systolic_bp_3) & is.na(systolic_bp_4),
+      NA_real_,
+      avg_sbp
+    )
+  ) %>%
+  select(patient_id, wave_id, avg_sbp)
+
+``` 
+
+
+Subsequently, a summary statistics table of average systolic blood pressure by wave as follows: 
+```{r Summary table, echo=FALSE}
+nhanes_summary <- nhanes_avg_bp %>%
+  group_by(wave_id) %>%
+  summarise(
+    min_bp = round(min(avg_sbp, na.rm = TRUE),2), 
+    max_bp = round(max(avg_sbp, na.rm = TRUE),2), 
+    median_bp = round(median(avg_sbp, na.rm = TRUE),2), 
+    mean_bp = round(mean(avg_sbp, na.rm = TRUE),2), 
+    std_bp = round(sd(avg_sbp, na.rm = TRUE), 2)
+  )
+
+nhanes_summary_table <- kable(nhanes_summary, format = "latex", 
+                         booktabs = TRUE, 
+                         col.names = c("Wave", "Minimum avg systolic bp",
+                                       "Maximum avg systolic bp", 
+                                       "Median avg systolic bp", 
+                                       "Mean avg systolic bp", 
+                                       "Standard deviation avg sytolic bp"
+                                       
+                                       ), 
+                         caption = "Summary statistics of average systolic blood pressure by wave") %>%
+                        row_spec(0, bold = TRUE) %>%
+                        kable_styling(
+                    latex_options = c("HOLD_position", "scale_down"), 
+                    full_width = FALSE)
+
+
+nhanes_summary_table
+``` 
+In conclusion, based on the table above of the average systolic blood pressure, we observed there is an increase in the median, mean and standard deviation of average systolic blood pressure from 2015 to 2017. In addition, we noted that 2015 has the biggest sample size, and the sample size decreased in 2016 and 2017. 
+
+
+# References
